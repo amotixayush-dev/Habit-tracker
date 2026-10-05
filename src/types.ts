@@ -66,3 +66,15 @@ export interface MonthlyReport {
 }
 
 export type ThemeMode = 'light' | 'dark';
+
+export type AuthProvider = 'google' | 'github' | 'email' | 'guest';
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  provider: AuthProvider;
+  createdAt: string;
+  lastLoginAt: string;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Habit, HabitLogs, ThemeMode } from './types';
+import { Habit, HabitLogs, ThemeMode, UserProfile } from './types';
 import {
   loadHabits,
   saveHabits,
@@ -7,11 +7,14 @@ import {
   saveLogs,
   loadTheme,
   saveTheme,
+  loadUser,
+  saveUser,
 } from './utils/storage';
 import { DailyTracker } from './components/DailyTracker';
 import { MonthlyReportView } from './components/MonthlyReport';
 import { HabitModal } from './components/HabitModal';
 import { SettingsModal } from './components/SettingsModal';
+import { AuthModal } from './components/AuthModal';
 import { NeumorphicButton } from './components/NeumorphicButton';
 import {
   CalendarCheck,
@@ -21,27 +24,32 @@ import {
   Sun,
   Moon,
   Sparkles,
+  User as UserIcon,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [logs, setLogs] = useState<HabitLogs>({});
   const [theme, setTheme] = useState<ThemeMode>('light');
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Initialize data on mount
   useEffect(() => {
     const loadedHabits = loadHabits();
     const loadedLogs = loadLogs();
     const loadedTh = loadTheme();
+    const loadedUser = loadUser();
 
     setHabits(loadedHabits);
     setLogs(loadedLogs);
     setTheme(loadedTh);
+    setCurrentUser(loadedUser);
 
     if (loadedTh === 'dark') {
       document.documentElement.classList.add('dark');
@@ -64,6 +72,17 @@ export const App: React.FC = () => {
   const handleDataReload = () => {
     setHabits(loadHabits());
     setLogs(loadLogs());
+    setCurrentUser(loadUser());
+  };
+
+  const handleLogin = (user: UserProfile) => {
+    setCurrentUser(user);
+    saveUser(user);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    saveUser(null);
   };
 
   const handleSaveHabit = (
@@ -164,7 +183,29 @@ export const App: React.FC = () => {
         </div>
 
         {/* Header Right Actions */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-2">
+          {/* User Profile / Sign In Pill */}
+          <button
+            type="button"
+            onClick={() => setIsAuthOpen(true)}
+            className="flex items-center space-x-2 px-3 py-1.5 rounded-xl neu-flat hover:neu-pressed active:scale-95 transition-all text-xs font-bold"
+            title={currentUser ? `Logged in as ${currentUser.name}` : 'Sign In with Google, GitHub, or Email'}
+          >
+            {currentUser?.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name}
+                className="w-5 h-5 rounded-full object-cover border border-indigo-400/40"
+              />
+            ) : (
+              <UserIcon className="w-4 h-4 text-indigo-500" />
+            )}
+            <span className="hidden sm:inline-block max-w-[80px] truncate text-neu-text dark:text-neu-darkText">
+              {currentUser ? currentUser.name.split(' ')[0] : 'Sign In'}
+            </span>
+          </button>
+
+          {/* Theme Toggle */}
           <NeumorphicButton
             size="icon"
             onClick={handleToggleTheme}
@@ -178,15 +219,17 @@ export const App: React.FC = () => {
             )}
           </NeumorphicButton>
 
+          {/* Settings */}
           <NeumorphicButton
             size="icon"
             onClick={() => setIsSettingsOpen(true)}
             aria-label="Settings"
-            title="App Settings"
+            title="App Settings & Backup"
           >
             <Settings className="w-4 h-4 text-neu-muted dark:text-neu-darkMuted" />
           </NeumorphicButton>
 
+          {/* New Habit Button */}
           <NeumorphicButton
             variant="primary"
             size="md"
@@ -257,6 +300,7 @@ export const App: React.FC = () => {
           <MonthlyReportView
             habits={habits}
             logs={logs}
+            currentUser={currentUser}
           />
         )}
       </main>
@@ -292,7 +336,17 @@ export const App: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        currentUser={currentUser}
+        onOpenAuth={() => setIsAuthOpen(true)}
         onDataReload={handleDataReload}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        currentUser={currentUser}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
       />
     </div>
   );

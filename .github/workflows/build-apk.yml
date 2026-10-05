@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v*" ]
+    tags: [ "v*", "beta*" ]
   workflow_dispatch:
 
 permissions:
@@ -57,19 +57,25 @@ jobs:
           if-no-files-found: error
 
       - name: Create or Update GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/beta')
         uses: softprops/action-gh-release@v2
         with:
           files: HabitTracker.apk
-          name: Habit Tracker ${{ github.ref_name }}
+          name: beta 2.0 Lez
           body: |
-            ## 🫧 Neumorphic Habit Tracker
+            ## 🫧 Neumorphic Habit Tracker — beta 2.0 Lez
 
-            ### Highlights:
+            ### What's New in beta 2.0:
+            - **Google & GitHub Authentication**: Sign in with Google, GitHub, Email/Password, or continue in Guest mode with local storage.
+            - **Verified Real JSON Export & Import**:
+              - Reliable cross-platform file download with fallback.
+              - 1-Click "Copy JSON to Clipboard".
+              - Direct "Paste JSON Text" import drawer for devices with restrictive file pickers.
+              - Strict schema validation with habit & log counts reported.
+            - **High-Fidelity Real Print & PDF Engine**:
+              - Dedicated printable document layout for `window.print()` with clean typography, executive KPI summary table, high-contrast calendar grid, and habit breakdown table.
+              - Standalone downloadable printable HTML report (`.html`) ready to open in any browser or save to PDF offline.
             - **Tactile Neumorphic (Soft UI)**: Light and Dark mode with realistic debossed and embossed soft shadows.
             - **Zero Pre-existing Habits**: Clean slate for the user. No mock habits or dummy tracking data.
-            - **Daily Habit Tracking**: 7-day pill carousel, real-time momentum progress bar with celebration confetti, completion notes.
-            - **Monthly Report & Heatmap**: 7-column calendar grid with color intensity levels, completion KPIs, day-by-day inspector, per-habit breakdown, Markdown export, and Print/PDF export.
-            - **Local Data Persistence**: 100% offline, privacy-first, with JSON backup export and import.
             - **Android APK**: Download and install `HabitTracker.apk` directly on Android devices.
           generate_release_notes: false

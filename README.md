@@ -1,4 +1,4 @@
-# 🫧 Neumorphic Habit Tracker
+# 🫧 Neumorphic Habit Tracker — beta 2.0 Lez
 
 A modern, tactile, and minimalist habit-tracking application built with a **Neumorphic (Soft UI)** design system in React, TypeScript, Tailwind CSS, and Capacitor for Android. 
 
@@ -6,7 +6,26 @@ Designed for deliberate daily routine building, habit consistency, and in-depth 
 
 ---
 
-## ✨ Features
+## 🌟 What's New in beta 2.0 Lez
+
+- 🔑 **Authentication & Profile Management**:
+  - **Continue with Google**: One-click Google sign-in with user avatar, name, and email.
+  - **Continue with GitHub**: Seamless authorization with your GitHub account.
+  - **Email & Password**: Create account or sign in with custom email credentials.
+  - **Guest Mode**: Full offline tracker functionality without an account.
+- 💾 **Real, Fully Functional JSON Backup & Restore**:
+  - **Reliable Export**: Direct `.json` file download with cross-platform fallback.
+  - **1-Click Copy**: Copy the entire backup JSON to clipboard in one tap.
+  - **File & Text Import**: Import via device file picker or paste backup text directly into the import drawer.
+  - **Integrity Validation**: Strict schema sanitization reporting exact counts of restored habits and log days.
+- 🖨️ **High-Fidelity Real Print & PDF Engine**:
+  - **Print / PDF**: Professional `@media print` layout eliminating blurry neumorphic shadows and rendering a clean, crisp executive summary, calendar matrix, and habit breakdown table.
+  - **Standalone HTML Report**: Download a self-contained `.html` report ready to view offline or print on any phone/device.
+  - **Markdown Export**: Direct `.md` file download and clipboard copy.
+
+---
+
+## ✨ Core Features
 
 - **Tactile Neumorphic (Soft UI) Interface**:
   - Realistic extruded and debossed soft shadows that give depth and tactile satisfaction to buttons, cards, and toggles.
@@ -24,16 +43,13 @@ Designed for deliberate daily routine building, habit consistency, and in-depth 
   - **GitHub-style Monthly Heatmap Grid**: 7-day weekday columns with color-intensity tiles mapping your consistency.
   - Interactive Day Inspector drawer to inspect any specific date's completions.
   - Individual habit performance breakdowns with monthly progress bars.
-  - **Export to Markdown**: Copy formatted markdown monthly review or download directly.
-  - **Print & PDF Export**: Printer-friendly CSS rules optimized for monthly summaries.
 - **Customizable Habits**:
   - 8 curated aesthetic color accents.
-  - Categories: Health, Productivity, Mindfulness, Fitness, Learning, Finance, Creativity, Other.
+  - Categories: Health, Productivity, Mindfulness, Fitness, Learning, Finance, Lifestyle.
   - Frequency scheduling: Every Day, Weekdays Only, Weekends Only, or Custom Days of the Week.
   - Flexible targets: Count and unit of measurement (e.g. 8 glasses, 30 mins, 10 pages).
-- **Data Privacy & Backup**:
+- **Data Privacy**:
   - 100% offline, local persistence in your browser/device storage.
-  - One-click JSON backup export and import.
 - **Android APK Ready**:
   - Packaged with Capacitor for Android.
   - GitHub Actions automated CI workflow building release and debug APKs.

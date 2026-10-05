@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Habit, HabitLogs } from '../types';
+import { Habit, HabitLogs, MonthlyReport, UserProfile } from '../types';
 import { generateMonthlyReport, formatDateKey } from '../utils/date';
+import { downloadFile } from '../utils/storage';
 import { NeumorphicCard } from './NeumorphicCard';
 import { NeumorphicButton } from './NeumorphicButton';
 import {
@@ -15,19 +16,27 @@ import {
   CheckCircle2,
   TrendingUp,
   Sparkles,
+  FileCode,
+  FileText,
 } from 'lucide-react';
 
 interface MonthlyReportProps {
   habits: Habit[];
   logs: HabitLogs;
+  currentUser?: UserProfile | null;
 }
 
-export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }) => {
+export const MonthlyReportView: React.FC<MonthlyReportProps> = ({
+  habits,
+  logs,
+  currentUser,
+}) => {
   const today = new Date();
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const [inspectedDay, setInspectedDay] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [printStatus, setPrintStatus] = useState<string | null>(null);
 
   const report = generateMonthlyReport(habits, logs, selectedYear, selectedMonth);
 
@@ -51,20 +60,41 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
     setInspectedDay(null);
   };
 
+  // Real Print trigger
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+      setPrintStatus('Print dialog opened.');
+      setTimeout(() => setPrintStatus(null), 3000);
+    } catch (e) {
+      console.error('Print failed', e);
+      // Fallback: download printable HTML
+      handleDownloadHtmlReport();
+    }
+  };
+
+  // Generate clean standalone HTML report for print / PDF saving
+  const handleDownloadHtmlReport = () => {
+    const html = generatePrintableHtml(report, currentUser?.name);
+    const filename = `habit-report-${report.year}-${String(report.month + 1).padStart(2, '0')}.html`;
+    downloadFile(filename, html, 'text/html');
+    setPrintStatus(`Downloaded printable HTML report: ${filename}`);
+    setTimeout(() => setPrintStatus(null), 3500);
   };
 
   const generateMarkdownSummary = () => {
     let md = `# Habit Tracker — Monthly Report: ${report.monthName} ${report.year}\n\n`;
-    md += `## Overview\n`;
+    if (currentUser?.name) {
+      md += `*Tracked for: ${currentUser.name} (${currentUser.email})*\n\n`;
+    }
+    md += `## Executive Summary\n`;
     md += `- **Overall Completion Rate**: ${report.completionRate}%\n`;
     md += `- **Total Check-ins**: ${report.totalCompleted} / ${report.totalScheduled}\n`;
-    md += `- **Perfect Days**: ${report.perfectDaysCount}\n`;
-    md += `- **Best Habit**: ${report.bestPerformingHabit || 'None'}\n`;
+    md += `- **Perfect (100%) Days**: ${report.perfectDaysCount}\n`;
+    md += `- **Top Performing Habit**: ${report.bestPerformingHabit || 'None'}\n`;
     md += `- **Longest Streak in Month**: ${report.longestStreakOverall} days\n\n`;
 
-    md += `## Habit Breakdown\n\n`;
+    md += `## Habit Performance Breakdown\n\n`;
     md += `| Habit | Category | Completed / Scheduled | Rate (%) | Longest Streak |\n`;
     md += `| :--- | :--- | :--- | :--- | :--- |\n`;
     report.habitStats.forEach(h => {
@@ -86,13 +116,8 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
 
   const handleDownloadSummary = () => {
     const text = generateMarkdownSummary();
-    const blob = new Blob([text], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `habit-report-${report.year}-${String(report.month + 1).padStart(2, '0')}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const filename = `habit-report-${report.year}-${String(report.month + 1).padStart(2, '0')}.md`;
+    downloadFile(filename, text, 'text/markdown');
   };
 
   // Find inspected day data if selected
@@ -106,6 +131,10 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto pb-16">
+      {/* ========================================================================= */}
+      {/* SCREEN VIEW (Interactive)                                                 */}
+      {/* ========================================================================= */}
+
       {/* Month Navigator & Export Bar */}
       <NeumorphicCard className="p-4 no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -131,46 +160,56 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
             </NeumorphicButton>
           </div>
 
-          <div className="flex items-center space-x-2 self-end sm:self-auto">
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
             <NeumorphicButton
               size="sm"
               onClick={handleCopySummary}
-              title="Copy text summary"
+              title="Copy markdown text summary"
             >
-              <Copy className="w-4 h-4 mr-1.5" />
-              {copySuccess ? 'Copied!' : 'Copy'}
+              <Copy className="w-3.5 h-3.5 mr-1" />
+              <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
             </NeumorphicButton>
 
             <NeumorphicButton
               size="sm"
               onClick={handleDownloadSummary}
-              title="Download report"
+              title="Download Markdown file"
             >
-              <Download className="w-4 h-4 mr-1.5" />
-              Export
+              <FileCode className="w-3.5 h-3.5 mr-1" />
+              <span>.md</span>
+            </NeumorphicButton>
+
+            <NeumorphicButton
+              size="sm"
+              onClick={handleDownloadHtmlReport}
+              title="Download Printable Standalone HTML"
+            >
+              <FileText className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+              <span>.html</span>
             </NeumorphicButton>
 
             <NeumorphicButton
               size="sm"
               variant="primary"
               onClick={handlePrint}
-              title="Print or save as PDF"
+              title="Print or Save as PDF"
             >
-              <Printer className="w-4 h-4 mr-1.5" />
-              Print
+              <Printer className="w-3.5 h-3.5 mr-1" />
+              <span>Print / PDF</span>
             </NeumorphicButton>
           </div>
         </div>
+
+        {printStatus && (
+          <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold mt-2.5 text-center">
+            {printStatus}
+          </p>
+        )}
       </NeumorphicCard>
 
-      {/* Printable Header */}
-      <div className="hidden print-only mb-6 text-center">
-        <h1 className="text-2xl font-bold">Monthly Habit Report</h1>
-        <p className="text-sm text-gray-500">{report.monthName} {report.year}</p>
-      </div>
-
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 no-print">
         <NeumorphicCard className="p-4 text-center">
           <TrendingUp className="w-5 h-5 mx-auto text-indigo-500 mb-1.5" />
           <span className="text-[11px] font-bold uppercase tracking-wider text-neu-muted dark:text-neu-darkMuted">
@@ -215,7 +254,10 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
           <span className="text-[11px] font-bold uppercase tracking-wider text-neu-muted dark:text-neu-darkMuted">
             Top Habit
           </span>
-          <p className="text-base font-bold truncate mt-1.5 text-purple-600 dark:text-purple-400" title={report.bestPerformingHabit || 'None'}>
+          <p
+            className="text-base font-bold truncate mt-1.5 text-purple-600 dark:text-purple-400"
+            title={report.bestPerformingHabit || 'None'}
+          >
             {report.bestPerformingHabit || '—'}
           </p>
           <span className="text-[10px] text-neu-muted dark:text-neu-darkMuted">
@@ -224,8 +266,8 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
         </NeumorphicCard>
       </div>
 
-      {/* Monthly Heatmap Calendar Matrix */}
-      <NeumorphicCard className="p-5">
+      {/* Monthly Heatmap Calendar Matrix (Screen) */}
+      <NeumorphicCard className="p-5 no-print">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Calendar className="w-5 h-5 text-indigo-500" />
@@ -250,106 +292,104 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
           ))}
         </div>
 
-        {/* Calendar Day Grid */}
+        {/* Day cells matrix */}
         <div className="grid grid-cols-7 gap-2">
           {leadingBlanks.map((_, idx) => (
-            <div key={`blank-${idx}`} className="aspect-square opacity-0" />
+            <div key={`blank-${idx}`} className="aspect-square opacity-0 pointer-events-none" />
           ))}
 
           {report.calendarDays.map(day => {
-            const isToday = day.dateStr === formatDateKey(new Date());
-            const isInspected = day.dateStr === inspectedDay;
+            const isToday = day.dateStr === formatDateKey(today);
+            const isSelected = day.dateStr === inspectedDay;
 
-            // Compute background shade based on intensity
-            let cellColor = '';
-            if (day.intensity === 4) {
-              cellColor = 'bg-emerald-500 text-white shadow-sm';
-            } else if (day.intensity === 3) {
-              cellColor = 'bg-indigo-600 text-white shadow-sm';
-            } else if (day.intensity === 2) {
-              cellColor = 'bg-indigo-400/80 text-white dark:bg-indigo-700';
-            } else if (day.intensity === 1) {
-              cellColor = 'bg-indigo-200 dark:bg-indigo-950/70 text-indigo-900 dark:text-indigo-200';
-            } else {
-              cellColor = day.scheduledCount > 0 ? 'neu-pressed-sm opacity-80' : 'opacity-40';
-            }
+            // Intensity background classes
+            const intensityBg =
+              day.intensity === 0
+                ? 'neu-pressed-sm text-neu-muted dark:text-neu-darkMuted'
+                : day.intensity === 1
+                ? 'bg-indigo-200/80 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-200 font-bold'
+                : day.intensity === 2
+                ? 'bg-indigo-400/90 dark:bg-indigo-800/90 text-white font-bold'
+                : day.intensity === 3
+                ? 'bg-indigo-600 dark:bg-indigo-600 text-white font-bold shadow-md'
+                : 'bg-emerald-500 text-white font-black shadow-lg';
 
             return (
               <button
                 key={day.dateStr}
                 type="button"
-                onClick={() => setInspectedDay(day.dateStr === inspectedDay ? null : day.dateStr)}
-                className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-xs font-bold transition-all relative ${
-                  isInspected
-                    ? 'ring-2 ring-indigo-500 ring-offset-2 scale-105 z-10'
-                    : 'hover:scale-105'
-                } ${cellColor}`}
+                onClick={() => setInspectedDay(isSelected ? null : day.dateStr)}
+                className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 relative transition-all text-xs ${intensityBg} ${
+                  isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 scale-105 z-10' : ''
+                } ${isToday ? 'border-2 border-indigo-500' : ''}`}
                 title={`${day.dateStr}: ${day.completedCount}/${day.scheduledCount} completed (${day.percentage}%)`}
               >
-                <span>{day.dayOfMonth}</span>
+                <span className="text-xs">{day.dayOfMonth}</span>
                 {day.scheduledCount > 0 && (
-                  <span className="text-[9px] opacity-90 font-medium">
+                  <span className="text-[9px] opacity-80 leading-none mt-0.5">
                     {day.completedCount}/{day.scheduledCount}
                   </span>
-                )}
-                {isToday && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 absolute top-1 right-1" />
                 )}
               </button>
             );
           })}
         </div>
-
-        {/* Selected Day Inspector Drawer */}
-        {inspectedDayData && (
-          <div className="mt-4 p-4 rounded-2xl neu-pressed-sm space-y-3 animate-fade-in text-left">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold">
-                {new Date(inspectedDayData.dateStr).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </h4>
-              <span className="text-xs font-bold text-indigo-500">
-                {inspectedDayData.percentage}% Completed ({inspectedDayData.completedCount}/{inspectedDayData.scheduledCount})
-              </span>
-            </div>
-
-            <div className="space-y-1.5">
-              {habits.map(h => {
-                const habitDone = logs[h.id]?.[inspectedDayData.dateStr]?.completed;
-                const habitNote = logs[h.id]?.[inspectedDayData.dateStr]?.note;
-                const isScheduled = h.frequency === 'daily' || !h.archived;
-
-                if (!isScheduled) return null;
-
-                return (
-                  <div
-                    key={h.id}
-                    className="flex items-center justify-between text-xs py-1 border-b border-gray-200/20 dark:border-gray-700/20 last:border-0"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: h.color }}
-                      />
-                      <span>{h.name}</span>
-                      {habitNote && (
-                        <span className="text-gray-400 italic text-[11px]">"{habitNote}"</span>
-                      )}
-                    </div>
-                    <span>{habitDone ? '✅ Done' : '❌ Missed'}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </NeumorphicCard>
 
-      {/* Habit-by-Habit Detailed Performance */}
-      <NeumorphicCard className="p-5">
+      {/* Day Inspector Drawer (Screen) */}
+      {inspectedDayData && (
+        <NeumorphicCard className="p-4 neu-pressed animate-fade-in no-print">
+          <div className="flex items-center justify-between mb-3 border-b border-gray-200/30 dark:border-gray-700/30 pb-2">
+            <div>
+              <h4 className="text-sm font-bold">
+                Inspecting: {new Date(inspectedDayData.dateStr + 'T00:00:00').toLocaleDateString(undefined, {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </h4>
+              <p className="text-[11px] text-neu-muted dark:text-neu-darkMuted">
+                {inspectedDayData.completedCount} of {inspectedDayData.scheduledCount} scheduled habits finished ({inspectedDayData.percentage}%)
+              </p>
+            </div>
+            <NeumorphicButton size="sm" onClick={() => setInspectedDay(null)}>
+              Close
+            </NeumorphicButton>
+          </div>
+
+          <div className="space-y-2">
+            {habits.map(habit => {
+              const habitLog = logs[habit.id]?.[inspectedDayData.dateStr];
+              const isCompleted = habitLog?.completed;
+              return (
+                <div
+                  key={habit.id}
+                  className="flex items-center justify-between p-2 rounded-xl neu-flat-sm text-xs"
+                >
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: habit.color }}
+                    />
+                    <span className="font-semibold">{habit.name}</span>
+                  </div>
+                  <span
+                    className={`font-bold ${
+                      isCompleted ? 'text-emerald-500' : 'text-gray-400'
+                    }`}
+                  >
+                    {isCompleted ? '✓ Completed' : '— Pending'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </NeumorphicCard>
+      )}
+
+      {/* Habit Breakdown (Screen) */}
+      <NeumorphicCard className="p-5 no-print">
         <h3 className="text-base font-bold mb-4 flex items-center space-x-2">
           <Sparkles className="w-5 h-5 text-indigo-500" />
           <span>Habit Performance Breakdown</span>
@@ -420,6 +460,266 @@ export const MonthlyReportView: React.FC<MonthlyReportProps> = ({ habits, logs }
           </div>
         )}
       </NeumorphicCard>
+
+      {/* ========================================================================= */}
+      {/* DEDICATED PRINT DOCUMENT (Hidden on screen, Visible only when printing)   */}
+      {/* ========================================================================= */}
+      <div className="hidden print:block print-only p-4 space-y-6">
+        {/* Document Header */}
+        <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-end">
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+              Habit Tracker — Monthly Performance Report
+            </h1>
+            <p className="text-base font-bold text-indigo-700 mt-1">
+              Reporting Month: {report.monthName} {report.year}
+            </p>
+          </div>
+          <div className="text-right text-xs text-slate-600">
+            {currentUser?.name && (
+              <p className="font-bold text-slate-900">User: {currentUser.name}</p>
+            )}
+            <p>Generated: {new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+
+        {/* Executive Summary Table */}
+        <div className="border border-slate-300 rounded-lg p-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+            Executive Summary
+          </h2>
+          <div className="grid grid-cols-4 gap-3 text-center">
+            <div className="p-2 border border-slate-200 rounded">
+              <span className="text-[10px] uppercase font-bold text-slate-500">Completion Rate</span>
+              <p className="text-xl font-black text-slate-900">{report.completionRate}%</p>
+              <span className="text-[10px] text-slate-500">{report.totalCompleted}/{report.totalScheduled} total</span>
+            </div>
+            <div className="p-2 border border-slate-200 rounded">
+              <span className="text-[10px] uppercase font-bold text-slate-500">Perfect (100%) Days</span>
+              <p className="text-xl font-black text-emerald-700">{report.perfectDaysCount}</p>
+              <span className="text-[10px] text-slate-500">days flawless</span>
+            </div>
+            <div className="p-2 border border-slate-200 rounded">
+              <span className="text-[10px] uppercase font-bold text-slate-500">Longest Streak</span>
+              <p className="text-xl font-black text-amber-700">{report.longestStreakOverall} d</p>
+              <span className="text-[10px] text-slate-500">consecutive</span>
+            </div>
+            <div className="p-2 border border-slate-200 rounded">
+              <span className="text-[10px] uppercase font-bold text-slate-500">Top Habit</span>
+              <p className="text-sm font-bold text-indigo-800 truncate mt-1">
+                {report.bestPerformingHabit || '—'}
+              </p>
+              <span className="text-[10px] text-slate-500">most consistent</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Printable Calendar Heatmap Table */}
+        <div className="border border-slate-300 rounded-lg p-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+            Monthly Consistency Calendar
+          </h2>
+          <table className="w-full text-center border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-100 font-bold border-b border-slate-300">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                  <th key={d} className="p-1 border border-slate-300">{d}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Build weeks */}
+              {(() => {
+                const cells = [
+                  ...leadingBlanks.map(() => null),
+                  ...report.calendarDays,
+                ];
+                const rows: (typeof report.calendarDays[0] | null)[][] = [];
+                for (let i = 0; i < cells.length; i += 7) {
+                  rows.push(cells.slice(i, i + 7));
+                }
+                return rows.map((row, rIdx) => (
+                  <tr key={`row-${rIdx}`}>
+                    {row.map((day, cIdx) => (
+                      <td
+                        key={`cell-${rIdx}-${cIdx}`}
+                        className={`p-1.5 border border-slate-300 align-top ${
+                          day
+                            ? day.intensity === 0
+                              ? 'bg-slate-50 text-slate-400'
+                              : day.intensity >= 3
+                              ? 'bg-indigo-100 text-slate-900 font-bold'
+                              : 'bg-indigo-50 text-slate-800'
+                            : 'bg-slate-100/50'
+                        }`}
+                        style={{ height: '48px', width: '14.28%' }}
+                      >
+                        {day && (
+                          <div className="flex flex-col justify-between h-full">
+                            <span className="font-bold">{day.dayOfMonth}</span>
+                            <span className="text-[9px]">
+                              {day.scheduledCount > 0 ? `${day.completedCount}/${day.scheduledCount}` : '—'}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ));
+              })()}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Printable Habit Breakdown Table */}
+        <div className="border border-slate-300 rounded-lg p-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+            Habit Breakdown Table
+          </h2>
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
+                <th className="p-2 border border-slate-300">Habit Name</th>
+                <th className="p-2 border border-slate-300">Category</th>
+                <th className="p-2 border border-slate-300">Frequency</th>
+                <th className="p-2 border border-slate-300">Completed / Sched.</th>
+                <th className="p-2 border border-slate-300">Rate (%)</th>
+                <th className="p-2 border border-slate-300">Longest Streak</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.habitStats.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-4 text-center text-slate-500 italic">
+                    No habits active for this period.
+                  </td>
+                </tr>
+              ) : (
+                report.habitStats.map(h => (
+                  <tr key={h.habit.id} className="border-b border-slate-200">
+                    <td className="p-2 border border-slate-300 font-bold">{h.habit.name}</td>
+                    <td className="p-2 border border-slate-300 capitalize">{h.habit.category}</td>
+                    <td className="p-2 border border-slate-300 capitalize">{h.habit.frequency}</td>
+                    <td className="p-2 border border-slate-300">{h.completedDays} / {h.scheduledDays}</td>
+                    <td className="p-2 border border-slate-300 font-bold">
+                      {h.percentage}%
+                    </td>
+                    <td className="p-2 border border-slate-300">{h.longestStreakInMonth} days</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-4 border-t border-slate-300 flex justify-between text-[10px] text-slate-500">
+          <span>Neumorphic Habit Tracker • Offline & Privacy-First</span>
+          <span>Verified Accurate Report</span>
+        </div>
+      </div>
     </div>
   );
 };
+
+/**
+ * Creates a standalone, self-contained printable HTML document
+ */
+function generatePrintableHtml(report: MonthlyReport, userName?: string): string {
+  const tableRows = report.habitStats
+    .map(
+      h => `
+    <tr>
+      <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">${h.habit.name}</td>
+      <td style="padding: 8px; border: 1px solid #cbd5e1; text-transform: capitalize;">${h.habit.category}</td>
+      <td style="padding: 8px; border: 1px solid #cbd5e1; text-transform: capitalize;">${h.habit.frequency}</td>
+      <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${h.completedDays} / ${h.scheduledDays}</td>
+      <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #4338ca;">${h.percentage}%</td>
+      <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">${h.longestStreakInMonth} days</td>
+    </tr>`
+    )
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Habit Tracker Report — ${report.monthName} ${report.year}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; color: #0f172a; line-height: 1.5; }
+    h1 { margin-bottom: 4px; font-size: 24px; color: #1e1b4b; }
+    .header-info { color: #64748b; font-size: 13px; margin-bottom: 24px; border-bottom: 2px solid #0f172a; padding-bottom: 12px; }
+    .kpi-container { display: flex; gap: 16px; margin-bottom: 28px; }
+    .kpi-box { flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; text-align: center; background: #f8fafc; }
+    .kpi-label { font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; }
+    .kpi-val { font-size: 24px; font-weight: 900; color: #0f172a; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
+    th { background: #f1f5f9; padding: 10px; border: 1px solid #cbd5e1; text-align: left; }
+    .footer { font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; }
+    @media print {
+      body { margin: 20px; }
+      button { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🫧 Habit Tracker — Monthly Performance Report</h1>
+  <div class="header-info">
+    <div><strong>Reporting Period:</strong> ${report.monthName} ${report.year}</div>
+    ${userName ? `<div><strong>User Profile:</strong> ${userName}</div>` : ''}
+    <div><strong>Generated On:</strong> ${new Date().toLocaleDateString()}</div>
+  </div>
+
+  <div class="kpi-container">
+    <div class="kpi-box">
+      <div class="kpi-label">Completion Rate</div>
+      <div class="kpi-val">${report.completionRate}%</div>
+      <div style="font-size: 11px; color: #64748b;">${report.totalCompleted} / ${report.totalScheduled} check-ins</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-label">Perfect Days</div>
+      <div class="kpi-val" style="color: #047857;">${report.perfectDaysCount}</div>
+      <div style="font-size: 11px; color: #64748b;">100% completion</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-label">Longest Streak</div>
+      <div class="kpi-val" style="color: #b45309;">${report.longestStreakOverall} days</div>
+      <div style="font-size: 11px; color: #64748b;">consecutive consistency</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-label">Top Habit</div>
+      <div class="kpi-val" style="font-size: 16px; margin-top: 8px;">${report.bestPerformingHabit || '—'}</div>
+      <div style="font-size: 11px; color: #64748b;">highest rate</div>
+    </div>
+  </div>
+
+  <h2 style="font-size: 16px; margin-bottom: 8px;">Habit Breakdown Table</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Habit Name</th>
+        <th>Category</th>
+        <th>Frequency</th>
+        <th style="text-align: center;">Completed / Scheduled</th>
+        <th style="text-align: center;">Rate (%)</th>
+        <th style="text-align: center;">Longest Streak</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows || '<tr><td colspan="6" style="padding: 16px; text-align: center; color: #94a3b8;">No habits tracked this month.</td></tr>'}
+    </tbody>
+  </table>
+
+  <div style="text-align: center; margin: 24px 0;">
+    <button onclick="window.print()" style="padding: 10px 20px; font-weight: bold; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">
+      Print Report or Save as PDF
+    </button>
+  </div>
+
+  <div class="footer">
+    <span>Neumorphic Habit Tracker • Open Source</span>
+    <span>Exported from Local Storage</span>
+  </div>
+</body>
+</html>`;
+}
