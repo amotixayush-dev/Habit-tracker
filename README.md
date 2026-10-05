@@ -1,92 +1,123 @@
-# Habit Tracker
+# 🫧 Neumorphic Habit Tracker
 
-A modern, intuitive habit tracking application designed to help build consistent routines, track daily progress, visualize streaks, and reach personal goals.
+A modern, tactile, and minimalist habit-tracking application built with a **Neumorphic (Soft UI)** design system in React, TypeScript, Tailwind CSS, and Capacitor for Android. 
+
+Designed for deliberate daily routine building, habit consistency, and in-depth monthly visual analytics — with **zero mock data** out of the box, giving you a fresh, clean slate from day one.
 
 ---
 
 ## ✨ Features
 
-- **Daily & Weekly Tracking**: Mark habits complete with one click and monitor current progress.
-- **Streak Counters & Momentum**: Stay motivated by tracking continuous completion streaks and milestone achievements.
-- **Categorization & Tags**: Group habits by categories (Health, Productivity, Mindfulness, Fitness, Learning).
-- **Flexible Scheduling**: Support for daily, weekly, or specific day-of-week routines.
-- **Insights & Analytics**: Visual charts showing completion rates, weekly trends, and long-term consistency.
-- **Agent-Ready Architecture**: Built-in development standards, adversarial audit protocols, and automated quality workflows.
+- **Tactile Neumorphic (Soft UI) Interface**:
+  - Realistic extruded and debossed soft shadows that give depth and tactile satisfaction to buttons, cards, and toggles.
+  - Seamless **Dark & Light Mode** toggle tailored with custom neumorphic lighting geometry.
+- **Pure Clean Slate (Zero Pre-existing Mock Habits)**:
+  - Starts 100% empty. No dummy habits or fake completions. You have full ownership of your tracking journey.
+- **Daily Tracker & Momentum**:
+  - Interactive 7-day pill carousel for quick day navigation.
+  - Real-time completion momentum progress bar with joyful celebration confetti when you hit 100%.
+  - Tactile debossed completion switches with streak badge indicators (`🔥 Streak`).
+  - Daily personal reflection & gratitude notes stored per day.
+- **Comprehensive Monthly Report & Visual Analytics**:
+  - Month and year navigation to review historical consistency.
+  - Overview KPI metrics: Completion Rate (%), Total Check-ins, Active Streak, and Perfect 100% Days.
+  - **GitHub-style Monthly Heatmap Grid**: 7-day weekday columns with color-intensity tiles mapping your consistency.
+  - Interactive Day Inspector drawer to inspect any specific date's completions.
+  - Individual habit performance breakdowns with monthly progress bars.
+  - **Export to Markdown**: Copy formatted markdown monthly review or download directly.
+  - **Print & PDF Export**: Printer-friendly CSS rules optimized for monthly summaries.
+- **Customizable Habits**:
+  - 8 curated aesthetic color accents.
+  - Categories: Health, Productivity, Mindfulness, Fitness, Learning, Finance, Creativity, Other.
+  - Frequency scheduling: Every Day, Weekdays Only, Weekends Only, or Custom Days of the Week.
+  - Flexible targets: Count and unit of measurement (e.g. 8 glasses, 30 mins, 10 pages).
+- **Data Privacy & Backup**:
+  - 100% offline, local persistence in your browser/device storage.
+  - One-click JSON backup export and import.
+- **Android APK Ready**:
+  - Packaged with Capacitor for Android.
+  - GitHub Actions automated CI workflow building release and debug APKs.
 
 ---
 
-## 🛠️ Project Structure
+## 📱 Android APK Installation
 
-```text
-habit-tracker/
-├── .agents/skills/        # Antigravity agent skills (Git workflows, audit, standards)
-├── .vibebreaker/          # 20-Pass adversarial security & resilience audit protocol
-├── AGENTS.md              # Agent instructions, boundaries, and workflow reference
-├── .commitlintrc.json     # Conventional commit linting configuration
-└── README.md              # Project documentation
-```
+You can install the app directly on your Android device:
+
+1. Download the `HabitTracker.apk` file from the [Releases section](https://github.com/amotixayush-dev/Habit-tracker/releases) or the root of this repository.
+2. Transfer or download the APK to your Android device.
+3. Open the downloaded `.apk` file and tap **Install** (allow installation from unknown sources if prompted in Android Settings).
+4. Launch **Habit Tracker** and start building your routines!
 
 ---
 
-## 🤖 Integrated Agent Skills
-
-This repository is equipped with Antigravity skills to ensure high code quality, security, and consistent architecture:
-
-| Skill | Purpose |
-| :--- | :--- |
-| **`vibebreaker`** | 20-pass adversarial audit verifying security, error handling, race conditions, and scalability. |
-| **`wednesday-git`** | Enforces conventional commits (`git-os`), sprint branch conventions, and clean PR workflows. |
-| **`codebase-intel`** | Graph-driven codebase intelligence, blast radius calculation, and risk scoring. |
-| **`standards-kit`** | Enforces complexity limits (<8), strict naming conventions, and UI component standards. |
-| **`deploy-checklist`** | Pre-deployment and post-deployment verification for seamless releases. |
-| **`brownfield-e2e-gen`**| Automated tiered E2E test generation and verification loop. |
-
----
-
-## 🚀 Getting Started
+## 🚀 Quick Start (Web Development)
 
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18 or higher)
-- [Git](https://git-scm.com/)
+- [npm](https://www.npmjs.com/)
 
-### Installation
+### Running Locally
 
 ```bash
 # Clone the repository
 git clone https://github.com/amotixayush-dev/Habit-tracker.git
-
-# Navigate to project directory
 cd Habit-tracker
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Visit `http://localhost:5173` in your browser.
+
+### Building for Production
+
+```bash
+# Build production bundle
+npm run build
 ```
 
 ---
 
-## 📋 Development & Commit Guidelines
-
-This project follows **Conventional Commits** (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`). Every commit is validated against [`.commitlintrc.json`](./.commitlintrc.json).
+## 🤖 Building Android APK with Capacitor
 
 ```bash
-# Example commit format
-git commit -m "feat(habits): add streak calculation logic"
+# Build web assets and sync to Android project
+npm run build
+npx cap sync android
+
+# Build Debug APK
+cd android
+./gradlew assembleDebug
 ```
+
+The APK will be generated at:
+`android/app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-## 🛡️ Auditing & Security
+## 🛠️ Tech Stack
 
-Run a VibeBreaker audit at any stage of development to stress-test the codebase:
+- **Framework**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS + Custom Neumorphic CSS Tokens
+- **Icons**: Lucide React
+- **Mobile Container**: Capacitor 6 (Android)
+- **Delight & Animations**: Canvas Confetti
 
-```bash
-# Verify audit protocol setup
-npx vibebreaker doctor
+---
 
-# Run adversarial review
-npx vibebreaker prompt
-```
+## 🛡️ Verification & Security
+
+Equipped with automated quality protocols and Antigravity workspace skills:
+- **Conventional Commits**: Validated with Commitlint
+- **VibeBreaker Protocol**: Multi-pass adversarial audit for resilience and security
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is open-source under the [MIT License](LICENSE).
