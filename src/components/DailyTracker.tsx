@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Habit, HabitLogs } from '../types';
 import { formatDateKey, isHabitScheduledForDate, calculateHabitStreaks } from '../utils/date';
 import { NeumorphicCard } from './NeumorphicCard';
@@ -267,17 +268,25 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
         </NeumorphicCard>
       ) : (
         <div className="space-y-3.5">
-          {scheduledHabits.map(habit => {
-            const isCompleted = !!logs[habit.id]?.[selectedDateKey]?.completed;
-            const habitNote = logs[habit.id]?.[selectedDateKey]?.note;
-            const { currentStreak } = calculateHabitStreaks(habit, logs, selectedDate);
-            const isMenuOpen = activeMenuHabitId === habit.id;
+          <AnimatePresence>
+            {scheduledHabits.map(habit => {
+              const isCompleted = !!logs[habit.id]?.[selectedDateKey]?.completed;
+              const habitNote = logs[habit.id]?.[selectedDateKey]?.note;
+              const { currentStreak } = calculateHabitStreaks(habit, logs, selectedDate);
+              const isMenuOpen = activeMenuHabitId === habit.id;
 
-            return (
-              <NeumorphicCard
-                key={habit.id}
-                className={`p-4 transition-all duration-200 relative ${
-                  isCompleted ? 'border-l-4 border-l-emerald-500' : ''
+              return (
+                <motion.div
+                  key={habit.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <NeumorphicCard
+                    className={`p-4 transition-all duration-200 relative ${
+                      isCompleted ? 'border-l-4 border-l-emerald-500' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -441,8 +450,10 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
                   </div>
                 )}
               </NeumorphicCard>
+                </motion.div>
             );
           })}
+          </AnimatePresence>
         </div>
       )}
     </div>

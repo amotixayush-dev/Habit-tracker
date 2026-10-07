@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Habit, HabitLogs, ThemeMode, UserProfile } from './types';
 import {
   loadHabits,
@@ -278,31 +279,49 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-2xl mx-auto">
-        {activeTab === 'daily' ? (
-          <DailyTracker
-            habits={habits}
-            logs={logs}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            onToggleHabit={handleToggleHabit}
-            onOpenAddModal={() => {
-              setEditingHabit(null);
-              setIsAddModalOpen(true);
-            }}
-            onEditHabit={habit => {
-              setEditingHabit(habit);
-              setIsAddModalOpen(true);
-            }}
-            onDeleteHabit={handleDeleteHabit}
-            onSaveNote={handleSaveNote}
-          />
-        ) : (
-          <MonthlyReportView
-            habits={habits}
-            logs={logs}
-            currentUser={currentUser}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {activeTab === 'daily' ? (
+            <motion.div
+              key="daily"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <DailyTracker
+                habits={habits}
+                logs={logs}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                onToggleHabit={handleToggleHabit}
+                onOpenAddModal={() => {
+                  setEditingHabit(null);
+                  setIsAddModalOpen(true);
+                }}
+                onEditHabit={habit => {
+                  setEditingHabit(habit);
+                  setIsAddModalOpen(true);
+                }}
+                onDeleteHabit={handleDeleteHabit}
+                onSaveNote={handleSaveNote}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="monthly"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonthlyReportView
+                habits={habits}
+                logs={logs}
+                currentUser={currentUser}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Mobile Floating Action Button (New Habit) */}
