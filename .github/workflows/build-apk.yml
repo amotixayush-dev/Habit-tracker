@@ -61,21 +61,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: HabitTracker.apk
-          name: beta 2.0 Lez
+          name: Release ${{ github.ref_name }}
           body: |
-            ## 🫧 Neumorphic Habit Tracker — beta 2.0 Lez
+            ## 🫧 Neumorphic Habit Tracker — ${{ github.ref_name }}
 
-            ### What's New in beta 2.0:
+            ### What's New:
+            - **Fluid Motion Animations**: Beautiful, bouncy spring animations added across all UI elements, lists, page transitions, and modals using Framer Motion.
             - **Google & GitHub Authentication**: Sign in with Google, GitHub, Email/Password, or continue in Guest mode with local storage.
-            - **Verified Real JSON Export & Import**:
-              - Reliable cross-platform file download with fallback.
-              - 1-Click "Copy JSON to Clipboard".
-              - Direct "Paste JSON Text" import drawer for devices with restrictive file pickers.
-              - Strict schema validation with habit & log counts reported.
-            - **High-Fidelity Real Print & PDF Engine**:
-              - Dedicated printable document layout for `window.print()` with clean typography, executive KPI summary table, high-contrast calendar grid, and habit breakdown table.
-              - Standalone downloadable printable HTML report (`.html`) ready to open in any browser or save to PDF offline.
+            - **Verified Real JSON Export & Import**: Reliable cross-platform file download with fallback.
+            - **High-Fidelity Real Print & PDF Engine**: Dedicated printable document layout for `window.print()` with clean typography.
             - **Tactile Neumorphic (Soft UI)**: Light and Dark mode with realistic debossed and embossed soft shadows.
-            - **Zero Pre-existing Habits**: Clean slate for the user. No mock habits or dummy tracking data.
             - **Android APK**: Download and install `HabitTracker.apk` directly on Android devices.
           generate_release_notes: false
