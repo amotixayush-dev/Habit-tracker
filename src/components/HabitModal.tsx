@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Habit, HabitCategory, HabitFrequency } from '../types';
 import { NeumorphicButton } from './NeumorphicButton';
 import { NeumorphicCard } from './NeumorphicCard';
@@ -79,7 +80,7 @@ export const HabitModal: React.FC<HabitModalProps> = ({
     }
   }, [initialHabit, isOpen]);
 
-  if (!isOpen) return null;
+  
 
   const handleToggleDay = (dayId: number) => {
     setCustomDays(prev =>
@@ -108,12 +109,28 @@ export const HabitModal: React.FC<HabitModalProps> = ({
     onClose();
   };
 
+  
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <NeumorphicCard
-        elevation="lg"
-        className="w-full max-w-md max-h-[92vh] overflow-y-auto p-6 relative border border-white/20 dark:border-white/5"
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', bounce: 0.3, duration: 0.4 }}
+            className="w-full max-w-md"
+          >
+            <NeumorphicCard
+              elevation="lg"
+              className="w-full max-h-[92vh] overflow-y-auto p-6 relative border border-white/20 dark:border-white/5"
+            >
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center space-x-2">
             <div
@@ -306,7 +323,10 @@ export const HabitModal: React.FC<HabitModalProps> = ({
             </NeumorphicButton>
           </div>
         </form>
-      </NeumorphicCard>
-    </div>
+            </NeumorphicCard>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
