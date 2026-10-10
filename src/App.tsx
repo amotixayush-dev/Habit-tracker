@@ -17,6 +17,7 @@ import { HabitModal } from './components/HabitModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AuthModal } from './components/AuthModal';
 import { NeumorphicButton } from './components/NeumorphicButton';
+import NutritionTracker from './components/NutritionTracker';
 import {
   CalendarCheck,
   BarChart3,
@@ -26,6 +27,7 @@ import {
   Moon,
   Sparkles,
   User as UserIcon,
+  Apple,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -33,7 +35,7 @@ export const App: React.FC = () => {
   const [logs, setLogs] = useState<HabitLogs>({});
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'tracz'>('daily');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -259,7 +261,7 @@ export const App: React.FC = () => {
             }`}
           >
             <CalendarCheck className="w-4 h-4" />
-            <span>Daily Tracker</span>
+            <span className="hidden sm:inline">Daily Tracker</span>
           </button>
 
           <button
@@ -272,7 +274,20 @@ export const App: React.FC = () => {
             }`}
           >
             <BarChart3 className="w-4 h-4" />
-            <span>Monthly Report</span>
+            <span className="hidden sm:inline">Monthly Report</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('tracz')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'tracz'
+                ? 'neu-button text-indigo-600 dark:text-indigo-400'
+                : 'text-neu-muted dark:text-neu-darkMuted hover:text-neu-text dark:hover:text-neu-darkText'
+            }`}
+          >
+            <Apple className="w-4 h-4" />
+            <span className="hidden sm:inline">Tracz Nutrition</span>
           </button>
         </div>
       </div>
@@ -306,7 +321,7 @@ export const App: React.FC = () => {
                 onSaveNote={handleSaveNote}
               />
             </motion.div>
-          ) : (
+          ) : activeTab === 'monthly' ? (
             <motion.div
               key="monthly"
               initial={{ opacity: 0, x: 20 }}
@@ -319,6 +334,16 @@ export const App: React.FC = () => {
                 logs={logs}
                 currentUser={currentUser}
               />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="tracz"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <NutritionTracker />
             </motion.div>
           )}
         </AnimatePresence>
